@@ -77,6 +77,32 @@ func (m *Matrix) Multiply(m2 *Matrix) (*Matrix, error) {
     return result, nil
 }
 
+func (m *Matrix) Transpose() *Matrix {
+	result, err := NewMatrix(m.Cols, m.Rows)
+
+	if err != nil {
+		panic("creating a new matrix failed during Transpose resulted in fatal error")
+	}
+	
+    for i := range m.Cols {
+    	for j := range m.Rows {
+    		v, err := m.At(j, i)
+
+    		if err != nil {
+    			panic("getting value from matrix resulted in fatal error")
+    		}
+
+    		err = result.Set(i, j, v)
+
+    		if err != nil {
+    			panic("setting value from matrix resulted in fatal error")
+    		}
+    	}
+    }
+
+	return result
+}
+
 func (m *Matrix) String() string {
 	var builder strings.Builder
 

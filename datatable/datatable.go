@@ -3,26 +3,28 @@ package datatable
 import (
 	"fmt"
 	"gonn/matrix"
+	"strconv"
+	"strings"
 )
 
 type DataTable struct {
 	Matrix *matrix.Matrix
-	Cols []string
+	Cols   []string
 }
 
-func NewDataTable(cols []string) (*DataTable, error) {
-	m, err := matrix.NewMatrix(1, len(cols))
+func NewDataTable(cols []string) *DataTable {
+	m, err := matrix.NewMatrix(0, len(cols))
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to create data table: %w", err)
+		panic("failed to create datatable matrix")
 	}
 
 	d := DataTable{
 		Matrix: m,
-		Cols: cols,
+		Cols:   cols,
 	}
 
-	return &d, nil
+	return &d
 }
 
 func (d *DataTable) AddRow(data []float64) error {
@@ -34,6 +36,8 @@ func (d *DataTable) AddRow(data []float64) error {
 		d.Matrix.Data = append(d.Matrix.Data, s)
 	}
 
+	d.Matrix.Rows++
+
 	return nil
 }
 
@@ -44,17 +48,51 @@ func (d *DataTable) AddColumn(name string, data []float64) error {
 		return fmt.Errorf("mismatch between datatable row count and data length")
 	}
 
+	m.Cols++
+	d.Cols = append(d.Cols, name)
+
 	for i, s := range data {
 		m.Data = append(m.Data, 0)
-		mIdx := i * m.Cols
+		mIdx := i * m.Cols + (m.Cols-1)
 
 		copy(m.Data[mIdx+1:], m.Data[mIdx:])
 
 		m.Data[mIdx] = s
 	}
 
-	m.Cols++
-	d.Cols = append(d.Cols, name)
-
 	return nil
+}
+
+func (d *DataTable) String() string {
+	var builder strings.Builder
+
+	builder.WriteString("[")
+	for i, c := range d.Cols {
+		if i > 0 {
+			builder.WriteString(" ")
+		}
+
+		builder.WriteString(c)
+	}
+	builder.WriteString("]\n")
+
+	for row := range d.Matrix.Rows {
+		builder.WriteString("[")
+		for col := range d.Matrix.Cols {
+			if col > 0 {
+				builder.WriteString(" ")
+			}
+
+			v, err := d.Matrix.At(row, col)
+
+			if err != nil {
+				panic("failed to get value of matrix for String print method")
+			}
+
+			builder.WriteString(strconv.FormatFloat(v, 'f', 2, 64))
+		}
+		builder.WriteString("]\n")
+	}
+
+	return builder.String()
 }

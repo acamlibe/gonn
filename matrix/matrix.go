@@ -12,7 +12,7 @@ type Matrix struct {
 }
 
 func NewMatrix(rows, cols int) (*Matrix, error) {
-    if rows <= 0 || cols <= 0 {
+    if rows < 0 || cols < 0 {
         return nil, fmt.Errorf("failed to create new matrix with dimensions %dx%d", 
         	rows, cols)
     }
@@ -83,7 +83,7 @@ func (m *Matrix) Transpose() *Matrix {
 	if err != nil {
 		panic("creating a new matrix failed during Transpose resulted in fatal error")
 	}
-	
+
     for i := range m.Cols {
     	for j := range m.Rows {
     		v, err := m.At(j, i)

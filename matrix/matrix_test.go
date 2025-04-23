@@ -27,6 +27,25 @@ func TestNewMatrix(t *testing.T) {
     }
 }
 
+func TestNewMatrixEmpty(t *testing.T) {
+    rows := 0
+    cols := 0
+
+    m, err := NewMatrix(rows, cols)
+
+    if err != nil {
+        t.Fatalf("expected no error, got %v", err)
+    }
+
+    if len(m.Data) != 0 {
+        t.Errorf("expected 0 data length, got %d", len(m.Data))
+    }
+
+    if !(m.Rows == rows && m.Cols == cols) {
+        t.Errorf("expected dimensions %dx%d, got %dx%d", rows, cols, m.Rows, m.Cols)
+    }
+}
+
 func TestNewMatrixError(t *testing.T) {
     rows := -1
     cols := 3

@@ -1,7 +1,6 @@
 package datatable
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -111,8 +110,6 @@ func TestAddColumn(t *testing.T) {
 	if s != float64(8) {
 		t.Errorf("expected %f, got %f", float64(8), s)
 	}
-
-	fmt.Printf("%v\n", d)
 }
 
 func TestAddColumnError(t *testing.T) {
@@ -133,6 +130,20 @@ func TestAddColumnEmpty(t *testing.T) {
 	d := NewDataTable(cols)
 
 	err := d.AddColumn("d", []float64{})
+
+	if err != nil {
+		t.Fatalf("expected no error, got error: %v", err)
+	}
+
+	if len(d.Matrix.Data) > 0 {
+		t.Errorf("expected %d rows, but got %d", 0, len(d.Matrix.Data))
+	}
+}
+
+func TestAddColumnNoColumns(t *testing.T) {
+	d := NewDataTable([]string{})
+
+	err := d.AddColumn("a", []float64{})
 
 	if err != nil {
 		t.Fatalf("expected no error, got error: %v", err)

@@ -46,6 +46,38 @@ func (m *Matrix) Set(row, col int, s float64) error {
 	return nil
 }
 
+func (m *Matrix) ColVec(col int) ([]float64, error) {
+	vec := make([]float64, m.Rows)
+
+	for row := range m.Rows {
+		v, err := m.At(row, col)
+
+		if err != nil {
+			fmt.Errorf("failed to get column vector: %w", err)
+		}
+
+		vec[row] = v
+	}
+
+	return vec, nil
+}
+
+func (m *Matrix) RowVec(row int) ([]float64, error) {
+	vec := make([]float64, m.Cols)
+
+	for col := range m.Cols {
+		v, err := m.At(row, col)
+
+		if err != nil {
+			fmt.Errorf("failed to get row vector: %w", err)
+		}
+
+		vec[col] = v
+	}
+
+	return vec, nil
+}
+
 func (m *Matrix) validIndex(row, col int) bool {
 	return row >= 0 && row < m.Rows && col >= 0 && col < m.Cols
 }

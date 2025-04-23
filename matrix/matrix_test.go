@@ -216,3 +216,83 @@ func TestTranspose(t *testing.T) {
 		t.Errorf("expected 3x2 to be %f, but got %f", exp[5], v)
 	}
 }
+
+func TestColVec(t *testing.T) {
+	// Input M1
+	// [2 3 4]
+	// [5 6 7]
+
+	// Input Col 1
+
+	// Output V
+	// [3 6]
+
+	m1, _ := NewMatrix(2, 3)
+	_ = m1.Set(0, 0, 2)
+	_ = m1.Set(0, 1, 3)
+	_ = m1.Set(0, 2, 4)
+
+	_ = m1.Set(1, 0, 5)
+	_ = m1.Set(1, 1, 6)
+	_ = m1.Set(1, 2, 7)
+
+	vec, err := m1.ColVec(1)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if len(vec) != 2 {
+		t.Errorf("expected vector length %d, got %d", 2, len(vec))
+	}
+
+	if vec[0] != float64(3) {
+		t.Errorf("expected vector[0] %f, got %f", float64(3), vec[0])
+	}
+
+	if vec[1] != float64(6) {
+		t.Errorf("expected vector[0] %f, got %f", float64(6), vec[1])
+	}
+}
+
+func TestRowVec(t *testing.T) {
+	// Input M1
+	// [2 3 4]
+	// [5 6 7]
+
+	// Input Row 0
+
+	// Output V
+	// [2 3 4]
+
+	m1, _ := NewMatrix(2, 3)
+	_ = m1.Set(0, 0, 2)
+	_ = m1.Set(0, 1, 3)
+	_ = m1.Set(0, 2, 4)
+
+	_ = m1.Set(1, 0, 5)
+	_ = m1.Set(1, 1, 6)
+	_ = m1.Set(1, 2, 7)
+
+	vec, err := m1.RowVec(0)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if len(vec) != 3 {
+		t.Errorf("expected vector length %d, got %d", 3, len(vec))
+	}
+
+	if vec[0] != float64(2) {
+		t.Errorf("expected vector[0] %f, got %f", float64(2), vec[0])
+	}
+
+	if vec[1] != float64(3) {
+		t.Errorf("expected vector[0] %f, got %f", float64(3), vec[1])
+	}
+
+	if vec[2] != float64(4) {
+		t.Errorf("expected vector[0] %f, got %f", float64(4), vec[2])
+	}
+}

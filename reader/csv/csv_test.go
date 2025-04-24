@@ -153,7 +153,7 @@ func TestReadLambdaError(t *testing.T) {
 	tr.DefineColumn(1, "sepal.width", simpleParse)
 	tr.DefineColumn(2, "petal.length", simpleParse)
 	tr.DefineColumn(3, "petal.width", simpleParse)
-	tr.DefineColumn(4, "variety", func (s *string) (float64, error) {
+	tr.DefineColumn(4, "variety", func(s *string) (float64, error) {
 		return float64(0), errors.New("test error")
 	})
 

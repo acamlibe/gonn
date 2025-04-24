@@ -10,8 +10,8 @@ import (
 
 type TableReader struct {
 	Path      *string
-	ColDefs   []ColumnDef
 	DataTable *datatable.DataTable
+	ColDefs   []ColumnDef
 	HasHeader bool
 }
 

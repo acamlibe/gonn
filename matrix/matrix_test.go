@@ -236,7 +236,7 @@ func TestColVec(t *testing.T) {
 	_ = m1.Set(1, 1, 6)
 	_ = m1.Set(1, 2, 7)
 
-	vec, err := m1.ColVec(1)
+	vec, err := m1.SliceCol(1)
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -255,7 +255,7 @@ func TestColVec(t *testing.T) {
 	}
 }
 
-func TestRowVec(t *testing.T) {
+func TestSliceRow(t *testing.T) {
 	// Input M1
 	// [2 3 4]
 	// [5 6 7]
@@ -274,7 +274,7 @@ func TestRowVec(t *testing.T) {
 	_ = m1.Set(1, 1, 6)
 	_ = m1.Set(1, 2, 7)
 
-	vec, err := m1.RowVec(0)
+	vec, err := m1.SliceRow(0)
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)

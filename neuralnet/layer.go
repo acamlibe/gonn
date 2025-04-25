@@ -8,9 +8,9 @@ import (
 
 type Layer struct {
 	Units         int
-	Values        matrix.Vector
+	Values        []float64
 	Weights       *matrix.Matrix
-	Biases        matrix.Vector
+	Biases        []float64
 	NextLayer     *Layer
 	isInputLayer  bool
 	isOutputLayer bool
@@ -35,7 +35,7 @@ func newLayer(units int, isInputLayer bool, isOutputLayer bool) (*Layer, error) 
 
 	layer := Layer{
 		Units:         units,
-		Values:        make(matrix.Vector, units),
+		Values:        make([]float64, units),
 		Biases:        randomVector(units),
 		isInputLayer:  isInputLayer,
 		isOutputLayer: isOutputLayer,
@@ -44,12 +44,12 @@ func newLayer(units int, isInputLayer bool, isOutputLayer bool) (*Layer, error) 
 	return &layer, nil
 }
 
-func randomVector(units int) matrix.Vector {
+func randomVector(units int) []float64 {
 	if units < 1 {
 		panic("failed to get random vector, invalid units length")
 	}
 
-	vec := make(matrix.Vector, units)
+	vec := make([]float64, units)
 
 	for i := range vec {
 		vec[i] = float64(rand.IntN(8) + 1)

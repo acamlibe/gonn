@@ -19,3 +19,9 @@ func Multiply(v1, v2 []float64) (float64, error) {
 
 	return sum, nil
 }
+
+func ApplyFn(v []float64, fn func(float64) float64) {
+	for i, s := range v {
+		v[i] = fn(s)
+	}
+}

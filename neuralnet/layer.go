@@ -6,45 +6,38 @@ import (
 	"math/rand/v2"
 )
 
-type Layer struct {
+type layer struct {
 	Units         int
 	Values        []float64
 	Weights       *matrix.Matrix
 	Biases        []float64
-	NextLayer     *Layer
-	isInputLayer  bool
-	isOutputLayer bool
+	NextLayer     *layer
+	ActivationFn  func(float64) float64
+	IsInputLayer  bool
+	IsOutputLayer bool
 }
 
-func NewInputLayer(units int) (*Layer, error) {
-	return newLayer(units, true, false)
-}
-
-func NewHiddenLayer(units int) (*Layer, error) {
-	return newLayer(units, false, false)
-}
-
-func NewOutputLayer(units int) (*Layer, error) {
-	return newLayer(units, false, true)
-}
-
-func newLayer(units int, isInputLayer bool, isOutputLayer bool) (*Layer, error) {
+func newLayer(units int, activationFn func(float64) float64, isInputLayer bool, isOutputLayer bool) (*layer, error) {
 	if units < 1 {
 		return nil, fmt.Errorf("layer units must be greater than 0, got %d", units)
 	}
 
-	layer := Layer{
+	layer := layer{
 		Units:         units,
 		Values:        make([]float64, units),
-		Biases:        randomVector(units),
-		isInputLayer:  isInputLayer,
-		isOutputLayer: isOutputLayer,
+		ActivationFn: activationFn,
+		IsInputLayer:  isInputLayer,
+		IsOutputLayer: isOutputLayer,
+	}
+
+	if !isInputLayer {
+		layer.Biases = randomBiases(units)
 	}
 
 	return &layer, nil
 }
 
-func randomVector(units int) []float64 {
+func randomBiases(units int) []float64 {
 	if units < 1 {
 		panic("failed to get random vector, invalid units length")
 	}

@@ -46,8 +46,8 @@ func (m *Matrix) Set(row, col int, s float64) error {
 	return nil
 }
 
-func (m *Matrix) ColVec(col int) ([]float64, error) {
-	vec := make([]float64, m.Rows)
+func (m *Matrix) SliceCol(col int) (Vector, error) {
+	vec := make(Vector, m.Rows)
 
 	for row := range m.Rows {
 		v, err := m.At(row, col)
@@ -62,8 +62,8 @@ func (m *Matrix) ColVec(col int) ([]float64, error) {
 	return vec, nil
 }
 
-func (m *Matrix) RowVec(row int) ([]float64, error) {
-	vec := make([]float64, m.Cols)
+func (m *Matrix) SliceRow(row int) (Vector, error) {
+	vec := make(Vector, m.Cols)
 
 	for col := range m.Cols {
 		v, err := m.At(row, col)

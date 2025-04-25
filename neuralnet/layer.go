@@ -2,15 +2,16 @@ package neuralnet
 
 import (
 	"fmt"
+	"gonn/matrix"
 	"math/rand/v2"
 )
 
 type Layer struct {
 	Units         int
-	Values        []float64
-	Weights       []float64
-	Biases        []float64
-	nextLayer     *Layer
+	Values        matrix.Vector
+	Weights       *matrix.Matrix
+	Biases        matrix.Vector
+	NextLayer     *Layer
 	isInputLayer  bool
 	isOutputLayer bool
 }
@@ -34,8 +35,7 @@ func newLayer(units int, isInputLayer bool, isOutputLayer bool) (*Layer, error) 
 
 	layer := Layer{
 		Units:         units,
-		Values:        make([]float64, units),
-		Weights:       randomVector(units),
+		Values:        make(matrix.Vector, units),
 		Biases:        randomVector(units),
 		isInputLayer:  isInputLayer,
 		isOutputLayer: isOutputLayer,
@@ -44,12 +44,12 @@ func newLayer(units int, isInputLayer bool, isOutputLayer bool) (*Layer, error) 
 	return &layer, nil
 }
 
-func randomVector(units int) []float64 {
+func randomVector(units int) matrix.Vector {
 	if units < 1 {
 		panic("failed to get random vector, invalid units length")
 	}
 
-	vec := make([]float64, units)
+	vec := make(matrix.Vector, units)
 
 	for i := range vec {
 		vec[i] = float64(rand.IntN(8) + 1)

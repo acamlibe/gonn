@@ -6,6 +6,7 @@ import (
 	"gonn/matrix"
 	"gonn/neuralnet/activation"
 	"gonn/vector"
+	"math/rand/v2"
 )
 
 type NeuralNet struct {
@@ -35,17 +36,35 @@ func (nn *NeuralNet) Train(x, y []float64) error {
 		return fmt.Errorf("train expected %d y length, got %d", outputLayer.Units, len(y))
 	}
 
-	return nn.forward(x, y)
+	return nn.forwardPropagate(x, y)
 }
 
-func (nn *NeuralNet) forward(x, y []float64) error {
+func (nn *NeuralNet) forwardPropagate(x, y []float64) error {
 	copy(nn.layers[0].Values, x)
 
 	for i := 0; i < len(nn.layers) - 1; i++ {
 		current := nn.layers[i]
 		next := nn.layers[i+1]
 
-		next.Values = vector.Multiply()
+		for unit := range(next.Units) {
+			weights, err := current.Weights.SliceRow(unit)
+
+			if err != nil {
+				return fmt.Errorf("failed to get weights when slicing row: %w", err)
+			}
+
+			newVal, err := vector.Multiply(current.Values, weights)
+
+			if err != nil {
+				return fmt.Errorf("failed to forward propagate: %w", err)
+			}
+
+			newVal += next.Biases[unit]
+
+			newVal = next.ActivationFn(newVal)
+
+			next.Values[unit] = newVal;
+		}
 	}
 
 	return nil
@@ -96,6 +115,10 @@ func (nn *NeuralNet) addLayer(units int, activationFn func(float64) float64, isI
 		return fmt.Errorf("failed to add input layer: %w", err)
 	}
 
+	if !isInputLayer {
+		layer.Biases = randomBiases(units)
+	}
+
 	nn.layers = append(nn.layers, *layer)
 
 	lenLayers := len(nn.layers)
@@ -121,9 +144,32 @@ func connectLayers(current, next *layer) error {
 
 	current.Weights = weights
 
+
 	return nil
 }
 
 func randomWeights(weights *matrix.Matrix) {
+	for row := range(weights.Rows) {
+		for col := range(weights.Cols) {
+			weights.Set(row, col, randomValue())
+		}
+	}
+}
 
+func randomBiases(units int) []float64 {
+	if units < 1 {
+		panic("failed to get random vector, invalid units length")
+	}
+
+	vec := make([]float64, units)
+
+	for i := range vec {
+		vec[i] = randomValue()
+	}
+
+	return vec
+}
+
+func randomValue() float64 {
+	return float64(rand.IntN(8) + 1)
 }

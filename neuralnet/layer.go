@@ -25,28 +25,10 @@ func newLayer(units int, activationFn func(float64) float64, isInputLayer bool, 
 	layer := layer{
 		Units:         units,
 		Values:        make([]float64, units),
-		ActivationFn: activationFn,
+		ActivationFn:  activationFn,
 		IsInputLayer:  isInputLayer,
 		IsOutputLayer: isOutputLayer,
 	}
 
-	if !isInputLayer {
-		layer.Biases = randomBiases(units)
-	}
-
 	return &layer, nil
-}
-
-func randomBiases(units int) []float64 {
-	if units < 1 {
-		panic("failed to get random vector, invalid units length")
-	}
-
-	vec := make([]float64, units)
-
-	for i := range vec {
-		vec[i] = float64(rand.IntN(8) + 1)
-	}
-
-	return vec
 }

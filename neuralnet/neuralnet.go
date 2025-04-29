@@ -13,7 +13,7 @@ type NeuralNet struct {
 	layers []layer
 }
 
-func NewNeuralNet() (*NeuralNet) {
+func NewNeuralNet() *NeuralNet {
 	return &NeuralNet{}
 }
 
@@ -32,7 +32,7 @@ func (nn *NeuralNet) Train(x, y []float64) error {
 		return fmt.Errorf("train expected %d x length, got %d", inputLayer.Units, len(x))
 	}
 
-	if (len(y) != outputLayer.Units) {
+	if len(y) != outputLayer.Units {
 		return fmt.Errorf("train expected %d y length, got %d", outputLayer.Units, len(y))
 	}
 
@@ -42,11 +42,11 @@ func (nn *NeuralNet) Train(x, y []float64) error {
 func (nn *NeuralNet) forwardPropagate(x, y []float64) error {
 	copy(nn.layers[0].Values, x)
 
-	for i := 0; i < len(nn.layers) - 1; i++ {
+	for i := 0; i < len(nn.layers)-1; i++ {
 		current := nn.layers[i]
 		next := nn.layers[i+1]
 
-		for unit := range(next.Units) {
+		for unit := range next.Units {
 			weights, err := current.Weights.SliceRow(unit)
 
 			if err != nil {
@@ -63,7 +63,7 @@ func (nn *NeuralNet) forwardPropagate(x, y []float64) error {
 
 			newVal = next.ActivationFn(newVal)
 
-			next.Values[unit] = newVal;
+			next.Values[unit] = newVal
 		}
 	}
 
@@ -144,13 +144,12 @@ func connectLayers(current, next *layer) error {
 
 	current.Weights = weights
 
-
 	return nil
 }
 
 func randomWeights(weights *matrix.Matrix) {
-	for row := range(weights.Rows) {
-		for col := range(weights.Cols) {
+	for row := range weights.Rows {
+		for col := range weights.Cols {
 			weights.Set(row, col, randomValue())
 		}
 	}

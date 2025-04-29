@@ -30,12 +30,12 @@ func (nn *NeuralNet) Train(x, y []float64) error {
 	}
 
 	inputLayer := nn.layers[0]
-	//hiddenLayers := nn.layers[1:lenLayers-1]
-	outputLayer := nn.layers[lenLayers-1]
 
 	if len(x) != inputLayer.Units {
 		return fmt.Errorf("train expected %d x length, got %d", inputLayer.Units, len(x))
 	}
+
+	outputLayer := nn.layers[lenLayers-1]
 
 	if len(y) != outputLayer.Units {
 		return fmt.Errorf("train expected %d y length, got %d", outputLayer.Units, len(y))
@@ -198,6 +198,8 @@ func connectLayers(current, next *layer) error {
 	if err != nil {
 		return fmt.Errorf("failed to initialize weights: %w", err)
 	}
+
+	randomWeights(weights)
 
 	current.Weights = weights
 

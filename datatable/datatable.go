@@ -63,6 +63,47 @@ func (d *DataTable) AddColumn(name string, data []float64) error {
 	return nil
 }
 
+func (d *DataTable) RemoveColumn(name string) error {
+    // Find the index of the column to remove
+    colIdx, err := d.findColIdx(name)
+    if err != nil {
+        return err
+    }
+
+    // Remove the column name from Cols slice
+    d.Cols = append(d.Cols[:colIdx], d.Cols[colIdx+1:]...)
+
+    // Remove the column data from the matrix
+    m := d.Matrix
+    newData := make([]float64, 0, (m.Cols-1)*m.Rows)
+
+    for row := 0; row < m.Rows; row++ {
+        for col := 0; col < m.Cols; col++ {
+            if col == colIdx {
+                continue // Skip the column we're removing
+            }
+            idx := row*m.Cols + col
+            newData = append(newData, m.Data[idx])
+        }
+    }
+
+    // Update the matrix
+    m.Data = newData
+    m.Cols--
+
+    return nil
+}
+
+func (d *DataTable) findColIdx(name string) (int, error) {
+	for i, col := range(d.Cols) {
+		if strings.EqualFold(col, name) {
+			return i, nil
+		}
+	}
+
+	return 0, fmt.Errorf("failed to find column: %v", name)
+}
+
 func (d *DataTable) String() string {
 	var builder strings.Builder
 

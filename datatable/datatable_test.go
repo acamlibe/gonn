@@ -153,3 +153,50 @@ func TestAddColumnNoColumns(t *testing.T) {
 		t.Errorf("expected %d rows, but got %d", 0, len(d.Matrix.Data))
 	}
 }
+
+func TestRemoveColumn(t *testing.T) {
+	cols := []string{"a", "b", "c"}
+	colToRemove := "c"
+
+	d := NewDataTable(cols)
+
+	err := d.AddRow([]float64{1, 2, 3})
+
+	if err != nil {
+		t.Fatalf("expected no error, got error: %v", err)
+	}
+
+	err = d.AddRow([]float64{4, 5, 6})
+
+	if err != nil {
+		t.Fatalf("expected no error, got error: %v", err)
+	}
+
+	err = d.RemoveColumn(colToRemove)
+
+	if err != nil {
+		t.Fatalf("expected no error, got error: %v", err)
+	}
+
+	if len(d.Cols) != 2 {
+		t.Errorf("expected %d datatable columns, got %d", 2, len(d.Cols))
+	}
+
+	if d.Matrix.Cols != 2 {
+		t.Errorf("expected %d matrix columns, got %d", 2, d.Matrix.Cols)
+	}
+
+	if len(d.Matrix.Data) != 4 {
+		t.Errorf("expected %d matrix data length, got %d", 4, len(d.Matrix.Data))
+	}
+
+	v, err := d.Matrix.At(0, 1)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if v != float64(2) {
+		t.Errorf("expected %f matrix value for (%d,%d), got %f", float64(2), 0, 1, v)
+	}
+}

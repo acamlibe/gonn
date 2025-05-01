@@ -2,11 +2,11 @@ package activation
 
 import "math"
 
-func None(x float64) float64 {
+func Identity(x float64) float64 {
 	return x
 }
 
-func NonePrime(x float64) float64 {
+func IdentityPrime(x float64) float64 {
 	return 1
 }
 

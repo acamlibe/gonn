@@ -2,6 +2,7 @@ package neuralnet
 
 import (
 	"errors"
+	"gonn/neuralnet/loss"
 	"gonn/reader/csv"
 	"strconv"
 	"strings"
@@ -31,13 +32,13 @@ func classParse(s *string) (float64, error) {
 	}
 }
 
-func TestNewNeuralNet(t *testing.T) {
+func TestRegression(t *testing.T) {
 	//sepal.length, sepal.width, petal.length, petal.width, variety
 
-	path := "../reader/csv/test.csv"
+	path := "../sample/winequality-red.csv"
 	hasHeader := true
 
-	r := csv.NewReader(path, hasHeader)
+	r := csv.NewReader(path, hasHeader, ';')
 
 	r.DefineColumn(0, "sepal.length", simpleParse)
 	r.DefineColumn(1, "sepal.width", simpleParse)
@@ -61,9 +62,9 @@ func TestNewNeuralNet(t *testing.T) {
 	isVirginica := make([]float64, r.DataTable.Matrix.Rows)
 	isVersicolor := make([]float64, r.DataTable.Matrix.Rows)
 
-	for i, v := range(variety) {
+	for i, v := range variety {
 		switch v {
-		case 0: 
+		case 0:
 			isSetosa[i] = 1
 			isVirginica[i] = 0
 			isVersicolor[i] = 0
@@ -75,7 +76,12 @@ func TestNewNeuralNet(t *testing.T) {
 			isSetosa[i] = 0
 			isVirginica[i] = 0
 			isVersicolor[i] = 1
-		default: t.Fatalf("failed to parse value %d to flower type", v)
+		default:
+			t.Fatalf("failed to parse value %d to flower type", v)
 		}
 	}
+
+	lr := 0.1
+
+	nn := NewNeuralNet(lr, loss.MSE)
 }

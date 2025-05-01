@@ -13,6 +13,7 @@ type TableReader struct {
 	DataTable *datatable.DataTable
 	ColDefs   []ColumnDef
 	HasHeader bool
+	Separator rune
 }
 
 type ColumnDef struct {
@@ -21,7 +22,7 @@ type ColumnDef struct {
 	ParseFn func(v *string) (float64, error)
 }
 
-func NewReader(path string, hasHeader bool) *TableReader {
+func NewReader(path string, hasHeader bool, separator rune) *TableReader {
 	return &TableReader{
 		Path:      &path,
 		HasHeader: hasHeader,
@@ -48,6 +49,7 @@ func (tr *TableReader) ReadTable() error {
 	funcLen := len(tr.ColDefs)
 
 	r := csv.NewReader(f)
+	r.Comma = tr.Separator
 
 	tr.DataTable = datatable.NewDataTable([]string{})
 

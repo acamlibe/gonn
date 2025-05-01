@@ -10,12 +10,12 @@ import (
 )
 
 type NeuralNet struct {
-	LossFn       func(float64, float64) float64
+	LossFn       func(y, yPred float64) float64
 	LearningRate float64
 	layers       []layer
 }
 
-func NewNeuralNet(lr float64, lossFn func(float64, float64) float64) *NeuralNet {
+func NewNeuralNet(lr float64, lossFn func(y, yPred float64) float64) *NeuralNet {
 	return &NeuralNet{
 		LearningRate: lr,
 		LossFn:       lossFn,
@@ -64,13 +64,13 @@ func (nn *NeuralNet) forwardPropagate(x, y []float64) error {
 		next := nn.layers[i+1]
 
 		for unit := range next.Units {
-			weights, err := current.Weights.SliceRow(unit)
+			w, err := current.Weights.SliceRow(unit)
 
 			if err != nil {
 				return fmt.Errorf("failed to get weights when slicing row: %w", err)
 			}
 
-			z, err := vector.Multiply(current.Values, weights)
+			z, err := vector.Multiply(current.Values, w)
 
 			if err != nil {
 				return fmt.Errorf("failed to forward propagate: %w", err)
@@ -91,16 +91,16 @@ func (nn *NeuralNet) backwardPropagate(y []float64) error {
 	lenLayers := len(nn.layers)
 
 	// Start from output layer and move backward
-	for layerIdx := lenLayers - 1; layerIdx > 0; layerIdx-- {
-		current := nn.layers[layerIdx]
-		prev := nn.layers[layerIdx-1]
+	for i := lenLayers - 1; i > 0; i-- {
+		current := nn.layers[i]
+		prev := nn.layers[i-1]
 
 		for i := range current.Units {
 			var loss float64
 
 			if current.IsOutputLayer {
 				// Output layer error: (y_pred - y_true)
-				loss = current.Values[i] - y[i]
+				loss = nn.LossFn(y[i], current.Values[i])
 			} else {
 				// Hidden layer error: sum of weighted errors from next layer
 				for j := range current.NextLayer.Units {
@@ -132,10 +132,10 @@ func (nn *NeuralNet) AddInputLayer(units int) error {
 		return errors.New("only first layer must be an input layer")
 	}
 
-	return nn.addLayer(units, activation.None, activation.NonePrime, true, false)
+	return nn.addLayer(units, activation.Identity, activation.IdentityPrime, true, false)
 }
 
-func (nn *NeuralNet) AddHiddenLayer(units int, activationFn func(float64) float64, activationPrimeFn func(float64) float64) error {
+func (nn *NeuralNet) AddHiddenLayer(units int, activationFn func(z float64) float64, activationPrimeFn func(z float64) float64) error {
 	if len(nn.layers) == 0 || !nn.layers[0].IsInputLayer {
 		return errors.New("first layer must be an input layer")
 	}
@@ -153,7 +153,7 @@ func (nn *NeuralNet) AddHiddenLayer(units int, activationFn func(float64) float6
 	return nil
 }
 
-func (nn *NeuralNet) AddOutputLayer(units int, activationFn func(float64) float64, activationPrimeFn func(float64) float64) error {
+func (nn *NeuralNet) AddOutputLayer(units int, activationFn func(z float64) float64, activationPrimeFn func(z float64) float64) error {
 	if len(nn.layers) == 0 || !nn.layers[0].IsInputLayer {
 		return errors.New("first layer must be an input layer")
 	}
@@ -165,7 +165,7 @@ func (nn *NeuralNet) AddOutputLayer(units int, activationFn func(float64) float6
 	return nn.addLayer(units, activationFn, activationPrimeFn, false, true)
 }
 
-func (nn *NeuralNet) addLayer(units int, activationFn func(float64) float64, activationPrimeFn func(float64) float64, isInputLayer, isOutputLayer bool) error {
+func (nn *NeuralNet) addLayer(units int, activationFn func(z float64) float64, activationPrimeFn func(z float64) float64, isInputLayer, isOutputLayer bool) error {
 	layer, err := newLayer(units, activationFn, activationPrimeFn, isInputLayer, isOutputLayer)
 
 	if err != nil {

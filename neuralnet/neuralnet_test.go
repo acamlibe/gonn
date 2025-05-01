@@ -2,7 +2,6 @@ package neuralnet
 
 import (
 	"errors"
-	"gonn/neuralnet/loss"
 	"gonn/reader/csv"
 	"strconv"
 	"strings"
@@ -77,11 +76,11 @@ func TestRegression(t *testing.T) {
 			isVirginica[i] = 0
 			isVersicolor[i] = 1
 		default:
-			t.Fatalf("failed to parse value %d to flower type", v)
+			t.Fatalf("failed to parse value %f to flower type", v)
 		}
 	}
 
-	lr := 0.1
+	//lr := 0.1
 
-	nn := NewNeuralNet(lr, loss.MSE)
+	//nn := NewNeuralNet(lr, loss.MSE)
 }

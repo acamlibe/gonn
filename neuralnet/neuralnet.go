@@ -78,7 +78,7 @@ func (nn *NeuralNet) forwardPropagate(x, y []float64) error {
 
 			z += next.Biases[unit]
 
-			z = next.ActivationFn(z)
+			z = next.Activation.Fn(z)
 
 			next.Values[unit] = z
 		}
@@ -110,7 +110,7 @@ func (nn *NeuralNet) backwardPropagate(y []float64) error {
 			}
 
 			// Apply derivative of activation
-			grad := loss * current.ActivationFnPrime(current.Values[i])
+			grad := loss * current.Activation.FnPrime(current.Values[i])
 			current.Gradients[i] = grad
 
 			// Update weights and biases
@@ -132,10 +132,10 @@ func (nn *NeuralNet) AddInputLayer(units int) error {
 		return errors.New("only first layer must be an input layer")
 	}
 
-	return nn.addLayer(units, activation.Identity, activation.IdentityPrime, true, false)
+	return nn.addLayer(units, activation.Identity(), true, false)
 }
 
-func (nn *NeuralNet) AddHiddenLayer(units int, activationFn func(z float64) float64, activationPrimeFn func(z float64) float64) error {
+func (nn *NeuralNet) AddHiddenLayer(units int, activation *activation.Activation) error {
 	if len(nn.layers) == 0 || !nn.layers[0].IsInputLayer {
 		return errors.New("first layer must be an input layer")
 	}
@@ -144,7 +144,7 @@ func (nn *NeuralNet) AddHiddenLayer(units int, activationFn func(z float64) floa
 		return errors.New("cannot add hidden layers after output layer")
 	}
 
-	err := nn.addLayer(units, activationFn, activationPrimeFn, false, false)
+	err := nn.addLayer(units, activation, false, false)
 
 	if err != nil {
 		return fmt.Errorf("failed to add hidden layer: %w", err)
@@ -153,7 +153,7 @@ func (nn *NeuralNet) AddHiddenLayer(units int, activationFn func(z float64) floa
 	return nil
 }
 
-func (nn *NeuralNet) AddOutputLayer(units int, activationFn func(z float64) float64, activationPrimeFn func(z float64) float64) error {
+func (nn *NeuralNet) AddOutputLayer(units int, activation *activation.Activation) error {
 	if len(nn.layers) == 0 || !nn.layers[0].IsInputLayer {
 		return errors.New("first layer must be an input layer")
 	}
@@ -162,11 +162,11 @@ func (nn *NeuralNet) AddOutputLayer(units int, activationFn func(z float64) floa
 		return errors.New("output layer already exists")
 	}
 
-	return nn.addLayer(units, activationFn, activationPrimeFn, false, true)
+	return nn.addLayer(units, activation, false, true)
 }
 
-func (nn *NeuralNet) addLayer(units int, activationFn func(z float64) float64, activationPrimeFn func(z float64) float64, isInputLayer, isOutputLayer bool) error {
-	layer, err := newLayer(units, activationFn, activationPrimeFn, isInputLayer, isOutputLayer)
+func (nn *NeuralNet) addLayer(units int, activation *activation.Activation, isInputLayer, isOutputLayer bool) error {
+	layer, err := newLayer(units, activation, isInputLayer, isOutputLayer)
 
 	if err != nil {
 		return fmt.Errorf("failed to add input layer: %w", err)

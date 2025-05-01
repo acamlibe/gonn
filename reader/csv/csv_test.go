@@ -31,7 +31,7 @@ func classParse(s *string) (float64, error) {
 }
 
 func TestRead(t *testing.T) {
-	tr := NewReader("../../sample/iris.csv", true)
+	tr := NewReader("../../sample/iris.csv", true, ',')
 
 	tr.DefineColumn(0, "sepal.length", simpleParse)
 	tr.DefineColumn(1, "sepal.width", simpleParse)
@@ -63,7 +63,7 @@ func TestRead(t *testing.T) {
 }
 
 func TestReadPartial(t *testing.T) {
-	tr := NewReader("../../sample/iris.csv", true)
+	tr := NewReader("../../sample/iris.csv", true, ',')
 
 	tr.DefineColumn(0, "sepal.length", simpleParse)
 	tr.DefineColumn(2, "petal.length", simpleParse)
@@ -91,7 +91,7 @@ func TestReadPartial(t *testing.T) {
 }
 
 func TestReadOutOfOrder(t *testing.T) {
-	tr := NewReader("../../sample/iris.csv", true)
+	tr := NewReader("../../sample/iris.csv", true, ',')
 
 	tr.DefineColumn(0, "sepal.length", simpleParse)
 	tr.DefineColumn(3, "sepal.width", simpleParse)
@@ -131,7 +131,7 @@ func TestReadOutOfOrder(t *testing.T) {
 }
 
 func TestReadInvalidPath(t *testing.T) {
-	tr := NewReader("missing.csv", true)
+	tr := NewReader("missing.csv", true, ',')
 
 	tr.DefineColumn(0, "sepal.length", simpleParse)
 	tr.DefineColumn(1, "sepal.width", simpleParse)
@@ -147,7 +147,7 @@ func TestReadInvalidPath(t *testing.T) {
 }
 
 func TestReadLambdaError(t *testing.T) {
-	tr := NewReader("../../sample/iris.csv", true)
+	tr := NewReader("../../sample/iris.csv", true, ',')
 
 	tr.DefineColumn(0, "sepal.length", simpleParse)
 	tr.DefineColumn(1, "sepal.width", simpleParse)

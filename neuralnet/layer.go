@@ -3,6 +3,7 @@ package neuralnet
 import (
 	"fmt"
 	"gonn/matrix"
+	"gonn/neuralnet/activation"
 )
 
 type layer struct {
@@ -12,13 +13,12 @@ type layer struct {
 	Biases            []float64
 	Gradients         []float64
 	NextLayer         *layer
-	ActivationFn      func(float64) float64
-	ActivationFnPrime func(float64) float64
+	Activation        *activation.Activation
 	IsInputLayer      bool
 	IsOutputLayer     bool
 }
 
-func newLayer(units int, activationFn func(float64) float64, activationPrimeFn func(float64) float64, isInputLayer bool, isOutputLayer bool) (*layer, error) {
+func newLayer(units int, activation *activation.Activation, isInputLayer bool, isOutputLayer bool) (*layer, error) {
 	if units < 1 {
 		return nil, fmt.Errorf("layer units must be greater than 0, got %d", units)
 	}
@@ -27,8 +27,7 @@ func newLayer(units int, activationFn func(float64) float64, activationPrimeFn f
 		Units:             units,
 		Values:            make([]float64, units),
 		Gradients:         make([]float64, units),
-		ActivationFn:      activationFn,
-		ActivationFnPrime: activationPrimeFn,
+		Activation:      activation,
 		IsInputLayer:      isInputLayer,
 		IsOutputLayer:     isOutputLayer,
 	}

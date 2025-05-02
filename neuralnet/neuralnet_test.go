@@ -2,7 +2,10 @@ package neuralnet
 
 import (
 	"errors"
+	"gonn/neuralnet/activation"
+	"gonn/neuralnet/loss"
 	"gonn/reader/csv"
+	"gonn/sample"
 	"strconv"
 	"strings"
 	"testing"
@@ -32,55 +35,59 @@ func classParse(s *string) (float64, error) {
 }
 
 func TestRegression(t *testing.T) {
-	//sepal.length, sepal.width, petal.length, petal.width, variety
+	path, err := sample.GetSampleFilePath("winequality-red.csv")
 
-	path := "../sample/winequality-red.csv"
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
 	hasHeader := true
 
 	r := csv.NewReader(path, hasHeader, ';')
 
-	r.DefineColumn(0, "sepal.length", simpleParse)
-	r.DefineColumn(1, "sepal.width", simpleParse)
-	r.DefineColumn(2, "petal.length", simpleParse)
-	r.DefineColumn(3, "petal.width", simpleParse)
-	r.DefineColumn(4, "variety", classParse)
+	r.DefineColumn(0, "fixed acidity", simpleParse)
+	r.DefineColumn(1, "volatile acidity", simpleParse)
+	r.DefineColumn(2, "citric acid", simpleParse)
+	r.DefineColumn(3, "residual sugar", simpleParse)
+	r.DefineColumn(4, "chlorides", simpleParse)
+	r.DefineColumn(5, "free sulfur dioxide", simpleParse)
+	r.DefineColumn(6, "total sulfur dioxide", simpleParse)
+	r.DefineColumn(7, "density", simpleParse)
+	r.DefineColumn(8, "pH", simpleParse)
+	r.DefineColumn(9, "sulphates", simpleParse)
+	r.DefineColumn(10, "alcohol", simpleParse)
+	r.DefineColumn(11, "quality", simpleParse)
 
-	err := r.ReadTable()
+	err = r.ReadTable()
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	variety, err := r.DataTable.Matrix.SliceCol(4)
+	m := r.DataTable.Matrix
 
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
+	lr := 0.1
 
-	isSetosa := make([]float64, r.DataTable.Matrix.Rows)
-	isVirginica := make([]float64, r.DataTable.Matrix.Rows)
-	isVersicolor := make([]float64, r.DataTable.Matrix.Rows)
+	nn := NewNeuralNet(lr, loss.MSE)
 
-	for i, v := range variety {
-		switch v {
-		case 0:
-			isSetosa[i] = 1
-			isVirginica[i] = 0
-			isVersicolor[i] = 0
-		case 1:
-			isSetosa[i] = 0
-			isVirginica[i] = 1
-			isVersicolor[i] = 0
-		case 2:
-			isSetosa[i] = 0
-			isVirginica[i] = 0
-			isVersicolor[i] = 1
-		default:
-			t.Fatalf("failed to parse value %f to flower type", v)
+	nn.AddInputLayer(11)
+	nn.AddHiddenLayer(20, activation.ReLU())
+	nn.AddOutputLayer(1, activation.Identity())
+
+	for row := range m.Rows {
+		v, err := m.SliceRow(row)
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		x := v[0:11]
+		y := v[11:12]
+
+		err = nn.Train(x, y)
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
 		}
 	}
-
-	//lr := 0.1
-
-	//nn := NewNeuralNet(lr, loss.MSE)
 }

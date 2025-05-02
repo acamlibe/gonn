@@ -59,7 +59,7 @@ func (nn *NeuralNet) Train(x, y []float64) error {
 func (nn *NeuralNet) forwardPropagate(x, y []float64) error {
 	copy(nn.layers[0].Values, x)
 
-	for i := 0; i < len(nn.layers)-1; i++ {
+	for i := range len(nn.layers) - 1 {
 		current := nn.layers[i]
 		next := nn.layers[i+1]
 
@@ -70,17 +70,16 @@ func (nn *NeuralNet) forwardPropagate(x, y []float64) error {
 				return fmt.Errorf("failed to get weights when slicing row: %w", err)
 			}
 
-			z, err := vector.Multiply(current.Values, w)
+			dot, err := vector.Multiply(current.Values, w)
 
 			if err != nil {
 				return fmt.Errorf("failed to forward propagate: %w", err)
 			}
 
-			z += next.Biases[unit]
+			z := dot + next.Biases[unit]
 
-			z = next.Activation.Fn(z)
-
-			next.Values[unit] = z
+			next.ZValues[unit] = z
+			next.Values[unit] = next.Activation.Fn(z)
 		}
 	}
 
@@ -90,37 +89,47 @@ func (nn *NeuralNet) forwardPropagate(x, y []float64) error {
 func (nn *NeuralNet) backwardPropagate(y []float64) error {
 	lenLayers := len(nn.layers)
 
-	// Start from output layer and move backward
 	for i := lenLayers - 1; i > 0; i-- {
 		current := nn.layers[i]
 		prev := nn.layers[i-1]
 
-		for i := range current.Units {
-			var loss float64
+		for j := range current.Units {
+			var delta float64
 
 			if current.IsOutputLayer {
-				// Output layer error: (y_pred - y_true)
-				loss = nn.LossFn(y[i], current.Values[i])
+				// Derivative of loss: dL/dy_pred
+				delta = current.Values[j] - y[j]
 			} else {
-				// Hidden layer error: sum of weighted errors from next layer
-				for j := range current.NextLayer.Units {
-					w, _ := current.Weights.At(j, i)
-					loss += current.NextLayer.Gradients[j] * w
+				// Hidden layer: sum of next layer gradients * corresponding weights
+				next := current.NextLayer
+				for k := range next.Units {
+					w, err := next.Weights.At(k, j)
+					if err != nil {
+						return fmt.Errorf("failed to access weight during backprop: %w", err)
+					}
+					delta += next.Gradients[k] * w
 				}
 			}
 
-			// Apply derivative of activation
-			grad := loss * current.Activation.FnPrime(current.Values[i])
-			current.Gradients[i] = grad
+			// Derivative of activation: dA/dZ
+			grad := delta * current.Activation.FnPrime(current.ZValues[j])
+			current.Gradients[j] = grad
 
 			// Update weights and biases
-			for j := range prev.Units {
-				oldWeight, _ := prev.Weights.At(i, j)
-				newWeight := oldWeight - nn.LearningRate*grad*prev.Values[j]
-				prev.Weights.Set(i, j, newWeight)
+			for k := range prev.Units {
+				oldWeight, err := prev.Weights.At(j, k)
+				if err != nil {
+					return fmt.Errorf("failed to access previous weight: %w", err)
+				}
+
+				newWeight := oldWeight - nn.LearningRate*grad*prev.Values[k]
+				err = prev.Weights.Set(j, k, newWeight)
+				if err != nil {
+					return fmt.Errorf("failed to set new weight: %w", err)
+				}
 			}
 
-			current.Biases[i] -= nn.LearningRate * grad
+			current.Biases[j] -= nn.LearningRate * grad
 		}
 	}
 
@@ -229,5 +238,5 @@ func randomBiases(units int) []float64 {
 }
 
 func randomValue() float64 {
-	return float64(rand.IntN(8) + 1)
+	return rand.Float64()*2 - 1
 }

@@ -26,6 +26,7 @@ func NewReader(path string, hasHeader bool, separator rune) *TableReader {
 	return &TableReader{
 		Path:      &path,
 		HasHeader: hasHeader,
+		Separator: separator,
 	}
 }
 

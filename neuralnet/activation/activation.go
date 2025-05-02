@@ -3,13 +3,13 @@ package activation
 import "math"
 
 type Activation struct {
-	Fn func(z float64) float64
+	Fn      func(z float64) float64
 	FnPrime func(z float64) float64
 }
 
 func Identity() *Activation {
 	return &Activation{
-		Fn: identity,
+		Fn:      identity,
 		FnPrime: identityPrime,
 	}
 }
@@ -24,7 +24,7 @@ func identityPrime(z float64) float64 {
 
 func ReLU() *Activation {
 	return &Activation{
-		Fn: relu,
+		Fn:      relu,
 		FnPrime: reluPrime,
 	}
 }
@@ -42,7 +42,7 @@ func reluPrime(z float64) float64 {
 
 func Sigmoid() *Activation {
 	return &Activation{
-		Fn: sigmoid,
+		Fn:      sigmoid,
 		FnPrime: sigmoidPrime,
 	}
 }

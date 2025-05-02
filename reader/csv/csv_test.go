@@ -2,6 +2,7 @@ package csv
 
 import (
 	"errors"
+	"gonn/sample"
 	"strconv"
 	"strings"
 	"testing"
@@ -31,7 +32,13 @@ func classParse(s *string) (float64, error) {
 }
 
 func TestRead(t *testing.T) {
-	tr := NewReader("../../sample/iris.csv", true, ',')
+	filePath, err := sample.GetSampleFilePath("iris.csv")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	tr := NewReader(filePath, true, ',')
 
 	tr.DefineColumn(0, "sepal.length", simpleParse)
 	tr.DefineColumn(1, "sepal.width", simpleParse)
@@ -39,7 +46,7 @@ func TestRead(t *testing.T) {
 	tr.DefineColumn(3, "petal.width", simpleParse)
 	tr.DefineColumn(4, "variety", classParse)
 
-	err := tr.ReadTable()
+	err = tr.ReadTable()
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -63,13 +70,19 @@ func TestRead(t *testing.T) {
 }
 
 func TestReadPartial(t *testing.T) {
-	tr := NewReader("../../sample/iris.csv", true, ',')
+	filePath, err := sample.GetSampleFilePath("iris.csv")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	tr := NewReader(filePath, true, ',')
 
 	tr.DefineColumn(0, "sepal.length", simpleParse)
 	tr.DefineColumn(2, "petal.length", simpleParse)
 	tr.DefineColumn(4, "variety", classParse)
 
-	err := tr.ReadTable()
+	err = tr.ReadTable()
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -91,7 +104,13 @@ func TestReadPartial(t *testing.T) {
 }
 
 func TestReadOutOfOrder(t *testing.T) {
-	tr := NewReader("../../sample/iris.csv", true, ',')
+	filePath, err := sample.GetSampleFilePath("iris.csv")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	tr := NewReader(filePath, true, ',')
 
 	tr.DefineColumn(0, "sepal.length", simpleParse)
 	tr.DefineColumn(3, "sepal.width", simpleParse)
@@ -99,7 +118,7 @@ func TestReadOutOfOrder(t *testing.T) {
 	tr.DefineColumn(2, "petal.width", simpleParse)
 	tr.DefineColumn(4, "variety", classParse)
 
-	err := tr.ReadTable()
+	err = tr.ReadTable()
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -131,7 +150,13 @@ func TestReadOutOfOrder(t *testing.T) {
 }
 
 func TestReadInvalidPath(t *testing.T) {
-	tr := NewReader("missing.csv", true, ',')
+	filePath, err := sample.GetSampleFilePath("missing.csv")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	tr := NewReader(filePath, true, ',')
 
 	tr.DefineColumn(0, "sepal.length", simpleParse)
 	tr.DefineColumn(1, "sepal.width", simpleParse)
@@ -139,7 +164,7 @@ func TestReadInvalidPath(t *testing.T) {
 	tr.DefineColumn(3, "petal.width", simpleParse)
 	tr.DefineColumn(4, "variety", classParse)
 
-	err := tr.ReadTable()
+	err = tr.ReadTable()
 
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -147,7 +172,13 @@ func TestReadInvalidPath(t *testing.T) {
 }
 
 func TestReadLambdaError(t *testing.T) {
-	tr := NewReader("../../sample/iris.csv", true, ',')
+	filePath, err := sample.GetSampleFilePath("iris.csv")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	tr := NewReader(filePath, true, ',')
 
 	tr.DefineColumn(0, "sepal.length", simpleParse)
 	tr.DefineColumn(1, "sepal.width", simpleParse)
@@ -157,7 +188,7 @@ func TestReadLambdaError(t *testing.T) {
 		return float64(0), errors.New("test error")
 	})
 
-	err := tr.ReadTable()
+	err = tr.ReadTable()
 
 	if err == nil {
 		t.Fatal("expected error, got nil")

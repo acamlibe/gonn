@@ -18,7 +18,7 @@ func identity(z float64) float64 {
 	return z
 }
 
-func identityPrime(z float64) float64 {
+func identityPrime(_ float64) float64 {
 	return 1
 }
 

@@ -9,43 +9,48 @@ import (
 )
 
 type TableReader struct {
-	Path      *string
+	Path      string
 	DataTable *datatable.DataTable
-	ColDefs   []ColumnDef
+	ColDefs   []*ColumnDef
 	HasHeader bool
 	Separator rune
 }
 
 type ColumnDef struct {
-	Name    *string
+	Name    string
 	Idx     int
 	ParseFn func(v *string) (float64, error)
 }
 
 func NewReader(path string, hasHeader bool, separator rune) *TableReader {
 	return &TableReader{
-		Path:      &path,
+		Path:      path,
 		HasHeader: hasHeader,
 		Separator: separator,
 	}
 }
 
 func (tr *TableReader) DefineColumn(idx int, name string, parseFn func(v *string) (float64, error)) {
-	tr.ColDefs = append(tr.ColDefs, ColumnDef{
-		Name:    &name,
+	tr.ColDefs = append(tr.ColDefs, &ColumnDef{
+		Name:    name,
 		Idx:     idx,
 		ParseFn: parseFn,
 	})
 }
 
 func (tr *TableReader) ReadTable() error {
-	f, err := os.Open(*tr.Path)
+	f, err := os.Open(tr.Path)
 
 	if err != nil {
-		return fmt.Errorf("failed to open file path: %s, with error: %w", *tr.Path, err)
+		return fmt.Errorf("failed to open file path: %s, with error: %w", tr.Path, err)
 	}
 
-	defer f.Close()
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			panic("failed to close file")
+		}
+	}(f)
 
 	funcLen := len(tr.ColDefs)
 
@@ -58,13 +63,13 @@ func (tr *TableReader) ReadTable() error {
 		_, err := r.Read()
 
 		if err != nil {
-			return fmt.Errorf("failed to read file header, path: %s, error: %w", *tr.Path, err)
+			return fmt.Errorf("failed to read file header, path: %s, error: %w", tr.Path, err)
 		}
 
 		for _, def := range tr.ColDefs {
-			err := tr.DataTable.AddColumn(*def.Name, []float64{})
+			err := tr.DataTable.AddColumn(def.Name, []float64{})
 			if err != nil {
-				return fmt.Errorf("failed to add column %s, error: %w", *def.Name, err)
+				return fmt.Errorf("failed to add column %s, error: %w", def.Name, err)
 			}
 		}
 	}

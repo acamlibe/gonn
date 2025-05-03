@@ -6,6 +6,7 @@ import (
 	"gonn/neuralnet/loss"
 	"gonn/reader/csv"
 	"gonn/sample"
+	"math"
 	"strconv"
 	"strings"
 	"testing"
@@ -41,9 +42,7 @@ func TestRegression(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	hasHeader := true
-
-	r := csv.NewReader(path, hasHeader, ';')
+	r := csv.NewReader(path, true, ';')
 
 	r.DefineColumn(0, "fixed acidity", simpleParse)
 	r.DefineColumn(1, "volatile acidity", simpleParse)
@@ -66,15 +65,27 @@ func TestRegression(t *testing.T) {
 
 	m := r.DataTable.Matrix
 
-	lr := 0.1
+	lr := 0.001
 
 	nn := NewNeuralNet(lr, loss.MSE)
 
-	nn.AddInputLayer(11)
-	nn.AddHiddenLayer(20, activation.ReLU())
-	nn.AddOutputLayer(1, activation.Identity())
+	err = nn.AddInputLayer(11)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	err = nn.AddHiddenLayer(20, activation.ReLU())
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	err = nn.AddOutputLayer(1, activation.Identity())
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 
-	for row := range m.Rows {
+	trainRows := int(math.Floor(float64(m.Rows) * 0.8))
+	testRows := m.Rows - trainRows
+
+	for row := range trainRows {
 		v, err := m.SliceRow(row)
 
 		if err != nil {
@@ -90,4 +101,31 @@ func TestRegression(t *testing.T) {
 			t.Fatalf("expected no error, got %v", err)
 		}
 	}
+
+	sumMapes := float64(0)
+
+	for row := range testRows {
+		v, err := m.SliceRow(row)
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		x := v[0:11]
+		y := v[11:12]
+
+		yPred, err := nn.Predict(x)
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		mape := (y[0] - yPred[0]) / y[0]
+
+		t.Logf("MAPE %f", mape)
+
+		sumMapes += mape
+	}
+
+	t.Logf("Overall MAPE: %f", sumMapes/float64(testRows))
 }

@@ -144,8 +144,8 @@ func TestReadOutOfOrder(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	if v != float64(0.2) {
-		t.Errorf("expected %f, got %f", float64(0.2), v)
+	if v != 0.2 {
+		t.Errorf("expected %f, got %f", 0.2, v)
 	}
 }
 

@@ -6,13 +6,15 @@ import (
 	"gonn/matrix"
 	"gonn/neuralnet/activation"
 	"gonn/vector"
+	"math"
 	"math/rand/v2"
 )
 
 type NeuralNet struct {
 	LossFn       func(y, yPred float64) float64
 	LearningRate float64
-	layers       []layer
+	layers       []*layer
+	hasTrained   bool
 }
 
 func NewNeuralNet(lr float64, lossFn func(y, yPred float64) float64) *NeuralNet {
@@ -41,7 +43,7 @@ func (nn *NeuralNet) Train(x, y []float64) error {
 		return fmt.Errorf("train expected %d y length, got %d", outputLayer.Units, len(y))
 	}
 
-	err := nn.forwardPropagate(x, y)
+	err := nn.forwardPropagate(x)
 
 	if err != nil {
 		return fmt.Errorf("failed to train model: %w", err)
@@ -53,10 +55,29 @@ func (nn *NeuralNet) Train(x, y []float64) error {
 		return fmt.Errorf("failed to train model: %w", err)
 	}
 
+	nn.hasTrained = true
+
 	return nil
 }
 
-func (nn *NeuralNet) forwardPropagate(x, y []float64) error {
+func (nn *NeuralNet) Predict(x []float64) ([]float64, error) {
+	if !nn.hasTrained {
+		return nil, errors.New("neuralnet has not been trained yet")
+	}
+
+	err := nn.forwardPropagate(x)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to predict model: %w", err)
+	}
+
+	lenLayers := len(nn.layers)
+	outputLayer := nn.layers[lenLayers-1]
+
+	return outputLayer.Values, nil
+}
+
+func (nn *NeuralNet) forwardPropagate(x []float64) error {
 	copy(nn.layers[0].Values, x)
 
 	for i := range len(nn.layers) - 1 {
@@ -89,6 +110,7 @@ func (nn *NeuralNet) forwardPropagate(x, y []float64) error {
 func (nn *NeuralNet) backwardPropagate(y []float64) error {
 	lenLayers := len(nn.layers)
 
+	// Start from output layer and move backward
 	for i := lenLayers - 1; i > 0; i-- {
 		current := nn.layers[i]
 		prev := nn.layers[i-1]
@@ -97,31 +119,37 @@ func (nn *NeuralNet) backwardPropagate(y []float64) error {
 			var delta float64
 
 			if current.IsOutputLayer {
-				// Derivative of loss: dL/dy_pred
+				// Output layer: derivative of loss
 				delta = current.Values[j] - y[j]
 			} else {
 				// Hidden layer: sum of next layer gradients * corresponding weights
-				next := current.NextLayer
+				next := nn.layers[i+1]
+
+				// We need to sum over all units in the next layer
+				sum := 0.0
 				for k := range next.Units {
-					w, err := next.Weights.At(k, j)
+					// The weight is from current unit j to next unit k
+					w, err := current.Weights.At(k, j) // Note: using current's weights, not next's
 					if err != nil {
 						return fmt.Errorf("failed to access weight during backprop: %w", err)
 					}
-					delta += next.Gradients[k] * w
+					sum += next.Gradients[k] * w
 				}
+				delta = sum
 			}
 
 			// Derivative of activation: dA/dZ
 			grad := delta * current.Activation.FnPrime(current.ZValues[j])
 			current.Gradients[j] = grad
 
-			// Update weights and biases
+			// Update weights between prev and current layers
 			for k := range prev.Units {
 				oldWeight, err := prev.Weights.At(j, k)
 				if err != nil {
 					return fmt.Errorf("failed to access previous weight: %w", err)
 				}
 
+				// Weight update: w = w - learning_rate * gradient * input
 				newWeight := oldWeight - nn.LearningRate*grad*prev.Values[k]
 				err = prev.Weights.Set(j, k, newWeight)
 				if err != nil {
@@ -129,6 +157,7 @@ func (nn *NeuralNet) backwardPropagate(y []float64) error {
 				}
 			}
 
+			// Update bias
 			current.Biases[j] -= nn.LearningRate * grad
 		}
 	}
@@ -185,7 +214,7 @@ func (nn *NeuralNet) addLayer(units int, activation *activation.Activation, isIn
 		layer.Biases = randomBiases(units)
 	}
 
-	nn.layers = append(nn.layers, *layer)
+	nn.layers = append(nn.layers, layer)
 
 	lenLayers := len(nn.layers)
 
@@ -193,7 +222,10 @@ func (nn *NeuralNet) addLayer(units int, activation *activation.Activation, isIn
 		current := nn.layers[lenLayers-2]
 		next := nn.layers[lenLayers-1]
 
-		connectLayers(&current, &next)
+		err := connectLayers(current, next)
+		if err != nil {
+			return fmt.Errorf("failed to connect layers: %w", err)
+		}
 	}
 
 	return nil
@@ -208,19 +240,27 @@ func connectLayers(current, next *layer) error {
 		return fmt.Errorf("failed to initialize weights: %w", err)
 	}
 
-	randomWeights(weights)
+	err = randomWeights(weights)
+	if err != nil {
+		return fmt.Errorf("failed to initialize weights: %w", err)
+	}
 
 	current.Weights = weights
 
 	return nil
 }
 
-func randomWeights(weights *matrix.Matrix) {
+func randomWeights(weights *matrix.Matrix) error {
 	for row := range weights.Rows {
 		for col := range weights.Cols {
-			weights.Set(row, col, randomValue())
+			err := weights.Set(row, col, glorotInit(weights.Rows, weights.Cols))
+			if err != nil {
+				return fmt.Errorf("failed to set matrix at (%d, %d): %w", row, col, err)
+			}
 		}
 	}
+
+	return nil
 }
 
 func randomBiases(units int) []float64 {
@@ -231,12 +271,13 @@ func randomBiases(units int) []float64 {
 	vec := make([]float64, units)
 
 	for i := range vec {
-		vec[i] = randomValue()
+		vec[i] = rand.Float64()
 	}
 
 	return vec
 }
 
-func randomValue() float64 {
-	return rand.Float64()*2 - 1
+func glorotInit(rows, cols int) float64 {
+	limit := math.Sqrt(6.0 / float64(rows+cols))
+	return rand.Float64()*2*limit - limit
 }

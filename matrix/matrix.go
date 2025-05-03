@@ -53,7 +53,7 @@ func (m *Matrix) SliceCol(col int) ([]float64, error) {
 		v, err := m.At(row, col)
 
 		if err != nil {
-			fmt.Errorf("failed to get column vector: %w", err)
+			return nil, fmt.Errorf("failed to get column vector: %w", err)
 		}
 
 		vec[row] = v
@@ -69,7 +69,7 @@ func (m *Matrix) SliceRow(row int) ([]float64, error) {
 		v, err := m.At(row, col)
 
 		if err != nil {
-			fmt.Errorf("failed to get row vector: %w", err)
+			return nil, fmt.Errorf("failed to get row vector: %w", err)
 		}
 
 		vec[col] = v

@@ -98,7 +98,6 @@ func (nn *NeuralNet) forwardPropagate(x []float64) error {
 			}
 
 			z := dot + next.Biases[unit]
-
 			next.ZValues[unit] = z
 			next.Values[unit] = next.Activation.Fn(z)
 		}
@@ -140,6 +139,7 @@ func (nn *NeuralNet) backwardPropagate(y []float64) error {
 
 			// Derivative of activation: dA/dZ
 			grad := delta * current.Activation.FnPrime(current.ZValues[j])
+			grad = clipGradient(grad, 1.0)
 			current.Gradients[j] = grad
 
 			// Update weights between prev and current layers
@@ -163,6 +163,16 @@ func (nn *NeuralNet) backwardPropagate(y []float64) error {
 	}
 
 	return nil
+}
+
+func clipGradient(grad, threshold float64) float64 {
+    if grad > threshold {
+        return threshold
+    }
+    if grad < -threshold {
+        return -threshold
+    }
+    return grad
 }
 
 func (nn *NeuralNet) AddInputLayer(units int) error {

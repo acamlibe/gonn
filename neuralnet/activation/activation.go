@@ -7,6 +7,14 @@ type Activation struct {
 	FnPrime func(z float64) float64
 }
 
+func IdentityRound() *Activation {
+	return &Activation{
+		Fn:      identityRound,
+		FnPrime: identityPrime,
+	}
+}
+
+
 func Identity() *Activation {
 	return &Activation{
 		Fn:      identity,
@@ -16,6 +24,10 @@ func Identity() *Activation {
 
 func identity(z float64) float64 {
 	return z
+}
+
+func identityRound(z float64) float64 {
+	return math.Round(z)
 }
 
 func identityPrime(_ float64) float64 {

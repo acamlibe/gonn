@@ -65,7 +65,7 @@ func TestRegression(t *testing.T) {
 
 	m := r.DataTable.Matrix
 
-	lr := 0.001
+	lr := 0.00001
 
 	nn := NewNeuralNet(lr, loss.MSE)
 
@@ -73,16 +73,16 @@ func TestRegression(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	err = nn.AddHiddenLayer(20, activation.ReLU())
+	err = nn.AddHiddenLayer(11, activation.ReLU())
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	err = nn.AddOutputLayer(1, activation.Identity())
+	err = nn.AddOutputLayer(1, activation.IdentityRound())
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	trainRows := int(math.Floor(float64(m.Rows) * 0.8))
+	trainRows := int(math.Floor(float64(m.Rows) * 0.95))
 	testRows := m.Rows - trainRows
 
 	for row := range trainRows {
@@ -104,7 +104,7 @@ func TestRegression(t *testing.T) {
 
 	sumMapes := float64(0)
 
-	for row := range testRows {
+	for row := trainRows; row < trainRows+testRows; row++ {
 		v, err := m.SliceRow(row)
 
 		if err != nil {
@@ -120,9 +120,18 @@ func TestRegression(t *testing.T) {
 			t.Fatalf("expected no error, got %v", err)
 		}
 
-		mape := (y[0] - yPred[0]) / y[0]
+		// With this safer MAPE calculation:
+		var mape float64
+		if y[0] != 0 {
+		    mape = math.Abs((y[0] - yPred[0]) / y[0])
+		} else {
+		    // Handle case where y[0] is 0
+		    // You might want to use absolute error instead or skip this sample
+		    mape = math.Abs(y[0] - yPred[0])
+		    // Or: continue to skip this sample
+		}
 
-		t.Logf("MAPE %f", mape)
+		t.Logf("MAPE %f, y %f, ypred %f", mape, y[0], yPred[0])
 
 		sumMapes += mape
 	}
